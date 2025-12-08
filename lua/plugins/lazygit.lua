@@ -12,8 +12,8 @@ return {
         local api = require("nvim-tree.api")
         local target_dir
 
+        -- 1. Determine target directory based on context (NvimTree vs Current Buffer)
         if vim.bo.filetype == "NvimTree" then
-          -- use the node (file or folder) under the cursor in Nvim-Tree
           local node = api.tree.get_node_under_cursor()
           if not node or not node.absolute_path then
             vim.notify("No node under cursor in Nvim-Tree!", vim.log.levels.WARN)
@@ -29,24 +29,29 @@ return {
           target_dir = vim.fn.expand("%:p:h")
         end
 
-        -- find the Git repo root
+        -- 2. Find the Git repo root
+        -- We use shellescape to handle paths with spaces correctly
         local cmd = "git -C " .. vim.fn.shellescape(target_dir) .. " rev-parse --show-toplevel"
         local git_root = vim.fn.systemlist(cmd)[1]
-        if vim.v.shell_error ~= 0 or git_root == "" then
+
+        if vim.v.shell_error ~= 0 or not git_root or git_root == "" then
           vim.notify("Not inside a Git repo: " .. target_dir, vim.log.levels.WARN)
           return
         end
 
-        -- change Neovim’s global cwd so explorers & pickers follow
+        -- 3. Update Global Context (Optional but requested)
+        -- You stated you want explorers to follow, so we keep this.
         vim.api.nvim_set_current_dir(git_root)
 
-        -- refresh Nvim-Tree root (if in use)
+        -- Refresh Nvim-Tree if active
         pcall(function()
           api.tree.change_root(git_root)
         end)
 
-        -- launch LazyGit
-        vim.cmd("LazyGit")
+        -- 4. THE FIX: Pass the path explicitly
+        -- We explicitly tell LazyGit which path to use, overriding its internal detection.
+        -- fnameescape ensures special characters don't break the command.
+        vim.cmd("LazyGit " .. vim.fn.fnameescape(git_root))
       end,
       desc = "LazyGit (repo root or Nvim-Tree node)",
     },

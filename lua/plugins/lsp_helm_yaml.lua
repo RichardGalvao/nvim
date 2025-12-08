@@ -10,7 +10,7 @@ return {
 
       -- YAML: explicitly exclude helm
       yamlls = {
-        filetypes = { "yaml", "yml", "yaml.docker-compose" }, -- no "helm" here
+        filetypes = { "yaml", "yml", "yaml.docker-compose" },
         settings = {
           redhat = { telemetry = { enabled = false } },
           yaml = {
@@ -20,12 +20,24 @@ return {
             schemas = {
               kubernetes = { "k8s/**/*.yaml", "manifests/**/*.yaml" },
             },
+
+            -- KEEP THIS! It prevents errors on {{ .Values }}
+            customTags = {
+              "!reference sequence",
+              "!reference mapping",
+              "!reference scalar",
+              "!reference default",
+              "!include sequence",
+              "!include mapping",
+              "!include scalar",
+              "!include default",
+            },
           },
         },
       },
     },
 
-    -- global on_attach guard: if yamlls ever lands on a helm buffer, stop it
+    -- global on_attach guard
     setup = {
       yamlls = function(_, _)
         local lspconfig = require("lspconfig")
@@ -38,7 +50,6 @@ return {
             client.stop()
           end
         end
-        -- let LazyVim continue with default setup
         return false
       end,
       helm_ls = function()

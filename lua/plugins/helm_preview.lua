@@ -54,4 +54,4 @@ vim.api.nvim_create_user_command("HelmPreview", function()
   pcall(vim.api.nvim_buf_set_name, buf, buf_name)
 end, {})
 
-vim.keymap.set("n", "<leader>htp", "<cmd>HelmPreview<CR>", { desc = "Helm Template Preview" })
+vim.keymap.set("n", "<leader>ht", "<cmd>HelmPreview<CR>", { desc = "Helm Template Preview" })
